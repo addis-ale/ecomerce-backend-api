@@ -48,11 +48,11 @@ const bcrypt_1 = require("bcrypt");
 const jwt = __importStar(require("jsonwebtoken"));
 const badRequest_1 = require("../exceptions/badRequest");
 const root_1 = require("../exceptions/root");
-const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, name, password } = req.body;
     let user = yield __1.prismaClient.user.findFirst({ where: { email } });
     if (user) {
-        throw new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS);
+        next(new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
     }
     user = yield __1.prismaClient.user.create({
         data: {
@@ -64,21 +64,23 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.json(user);
 });
 exports.signup = signup;
-const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     let user = yield __1.prismaClient.user.findFirst({ where: { email } });
     if (!user) {
-        throw Error("no user found");
+        next(new badRequest_1.BadRequestException("no user found", root_1.ErrorCodes.USER_NOT_FOUND));
     }
-    if (!(0, bcrypt_1.compareSync)(password, user.password)) {
-        throw Error("Invalid Credential");
+    if (user && !(0, bcrypt_1.compareSync)(password, user.password)) {
+        next(new badRequest_1.BadRequestException("Invalid Credential", root_1.ErrorCodes.INCORRECT_PASSWORD));
     }
     if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET is not defined");
     }
-    const token = jwt.sign({
-        userId: user.id,
-    }, process.env.JWT_SECRET);
-    res.json({ user, token });
+    if (user) {
+        const token = jwt.sign({
+            userId: user.id,
+        }, process.env.JWT_SECRET);
+        res.json({ user, token });
+    }
 });
 exports.login = login;
