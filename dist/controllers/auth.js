@@ -46,11 +46,13 @@ exports.login = exports.signup = void 0;
 const __1 = require("..");
 const bcrypt_1 = require("bcrypt");
 const jwt = __importStar(require("jsonwebtoken"));
+const badRequest_1 = require("../exceptions/badRequest");
+const root_1 = require("../exceptions/root");
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, name, password } = req.body;
     let user = yield __1.prismaClient.user.findFirst({ where: { email } });
     if (user) {
-        throw Error("user already exist");
+        throw new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS);
     }
     user = yield __1.prismaClient.user.create({
         data: {
