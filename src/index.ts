@@ -1,10 +1,13 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import rootRouter from "./routes";
+import { PrismaClient } from "@prisma/client";
 dotenv.config();
 const app = express();
 app.use(express.json());
-
+export const prismaClient = new PrismaClient({
+  log: ["query"],
+});
 app.use("/api", rootRouter);
 
 // Start the server
