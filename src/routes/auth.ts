@@ -1,7 +1,15 @@
-import { Router, Request, Response } from "express";
-import { login, signup } from "../controllers/auth";
+import express from "express";
+import { signup, login, me } from "../controllers/auth";
 import { errorHandler } from "../errorHandler";
-const authRoutes: Router = Router();
-authRoutes.post("/signup", errorHandler(signup));
-authRoutes.post("/login", errorHandler(login));
-export default authRoutes;
+import authMiddleware from "../middleware/auth";
+
+const router = express.Router();
+
+// ✅ Wrap controllers (not middleware)
+router.post("/signup", errorHandler(signup));
+router.post("/login", errorHandler(login));
+
+// ✅ Use middleware normally, then wrap controller
+router.get("/me", [authMiddleware], errorHandler(me));
+
+export default router;

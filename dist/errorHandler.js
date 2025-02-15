@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = void 0;
 const root_1 = require("./exceptions/root");
 const internalException_1 = require("./exceptions/internalException");
+const zod_1 = require("zod");
+const validation_1 = require("./exceptions/validation");
 const errorHandler = (method) => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -19,13 +21,17 @@ const errorHandler = (method) => {
         }
         catch (error) {
             let exception;
-            if (error instanceof root_1.HttpException) {
+            // ✅ Handle Zod Validation Errors
+            if (error instanceof zod_1.ZodError) {
+                exception = new validation_1.UnprocessableEntity(error.errors, "Validation failed", root_1.ErrorCodes.UNPROSSABLE_ENTITY);
+            }
+            else if (error instanceof root_1.HttpException) {
                 exception = error;
             }
             else {
                 exception = new internalException_1.InternalException("Something went wrong", error, root_1.ErrorCodes.INTERNAL_EXEPTION);
             }
-            next(exception);
+            next(exception); // ✅ No need to return
         }
     });
 };

@@ -34,7 +34,7 @@ export const signup = async (
     },
   });
 
-  res.status(201).json(user);
+  res.status(200).json(user);
 };
 
 export const login = async (
@@ -64,9 +64,10 @@ export const login = async (
     return next(new Error("JWT_SECRET is not defined"));
   }
 
-  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
   res.status(200).json({ user, token });
+};
+export const me = async (req: Request, res: Response) => {
+  res.json(req.user);
 };

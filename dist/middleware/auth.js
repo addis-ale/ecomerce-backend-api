@@ -42,48 +42,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.me = exports.login = exports.signup = void 0;
-const __1 = require("..");
-const bcrypt_1 = require("bcrypt");
-const jwt = __importStar(require("jsonwebtoken"));
-const badRequest_1 = require("../exceptions/badRequest");
-const notFound_1 = require("../exceptions/notFound");
+const unauthorized_1 = require("../exceptions/unauthorized");
 const root_1 = require("../exceptions/root");
-const users_1 = require("../models/users");
-const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    users_1.SignUpSchema.parse(req.body);
-    const { email, name, password } = req.body;
-    let user = yield __1.prismaClient.user.findFirst({ where: { email } });
-    if (user) {
-        return next(new badRequest_1.BadRequestException("User already exists!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
+const jwt = __importStar(require("jsonwebtoken"));
+const __1 = require("..");
+const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.headers.authorization;
+    if (!token) {
+        return next(new unauthorized_1.UnauthorizedException("Unauthorized", root_1.ErrorCodes.UNAUTHORIZED));
     }
-    user = yield __1.prismaClient.user.create({
-        data: {
-            name,
-            email,
-            password: (0, bcrypt_1.hashSync)(password, 10),
-        },
-    });
-    res.status(200).json(user);
+    try {
+        if (!process.env.JWT_SECRET) {
+            return next(new Error("JWT_SECRET is not defined"));
+        }
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const user = yield __1.prismaClient.user.findUnique({
+            where: { id: payload.userId },
+        });
+        if (!user) {
+            return next(new unauthorized_1.UnauthorizedException("Unauthorized", root_1.ErrorCodes.UNAUTHORIZED));
+        }
+        req.user = user; // ✅ Attach user object
+        next(); // ✅ Move to the next middleware
+    }
+    catch (error) {
+        return next(new unauthorized_1.UnauthorizedException("Unauthorized", root_1.ErrorCodes.UNAUTHORIZED));
+    }
 });
-exports.signup = signup;
-const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
-    let user = yield __1.prismaClient.user.findFirst({ where: { email } });
-    if (!user) {
-        return next(new notFound_1.NotFoundException("User not found", root_1.ErrorCodes.USER_NOT_FOUND));
-    }
-    if (!(0, bcrypt_1.compareSync)(password, user.password)) {
-        return next(new badRequest_1.BadRequestException("Invalid Credentials", root_1.ErrorCodes.INCORRECT_PASSWORD));
-    }
-    if (!process.env.JWT_SECRET) {
-        return next(new Error("JWT_SECRET is not defined"));
-    }
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
-    res.status(200).json({ user, token });
-});
-exports.login = login;
-const me = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    res.json(req.user);
-});
-exports.me = me;
+exports.default = authMiddleware;
