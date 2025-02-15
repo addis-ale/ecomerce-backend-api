@@ -4,29 +4,42 @@ import { hashSync, compareSync } from "bcrypt";
 import * as jwt from "jsonwebtoken";
 import { BadRequestException } from "../exceptions/badRequest";
 import { ErrorCodes } from "../exceptions/root";
+import { UnprocessableEntity } from "../exceptions/validation";
+import { SignUpSchema } from "../models/users";
 export const signup = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { email, name, password } = req.body;
-  let user = await prismaClient.user.findFirst({ where: { email } });
-  if (user) {
+  try {
+    SignUpSchema.parse(req.body);
+    const { email, name, password } = req.body;
+    let user = await prismaClient.user.findFirst({ where: { email } });
+    if (user) {
+      return next(
+        new BadRequestException(
+          "User already exist!",
+          ErrorCodes.USER_ALREADY_EXISTS
+        )
+      );
+    }
+    user = await prismaClient.user.create({
+      data: {
+        name,
+        email,
+        password: hashSync(password, 10),
+      },
+    });
+    res.json(user);
+  } catch (error: any) {
     next(
-      new BadRequestException(
-        "User already exist!",
-        ErrorCodes.USER_ALREADY_EXISTS
+      new UnprocessableEntity(
+        error?.issues,
+        "Unprocessable Entity",
+        ErrorCodes.UNPROSSABLE_ENTITY
       )
     );
   }
-  user = await prismaClient.user.create({
-    data: {
-      name,
-      email,
-      password: hashSync(password, 10),
-    },
-  });
-  res.json(user);
 };
 export const login = async (
   req: Request,
@@ -40,7 +53,7 @@ export const login = async (
   }
 
   if (user && !compareSync(password, user.password)) {
-    next(
+    return next(
       new BadRequestException(
         "Invalid Credential",
         ErrorCodes.INCORRECT_PASSWORD

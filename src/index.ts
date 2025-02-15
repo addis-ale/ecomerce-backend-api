@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import rootRouter from "./routes";
 import { PrismaClient } from "@prisma/client";
 import { errorMiddleware } from "./middleware/errors";
+import { SignUpSchema } from "./models/users";
 dotenv.config();
 const app = express();
 app.use(express.json());

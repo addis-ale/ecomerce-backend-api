@@ -16,4 +16,5 @@ var ErrorCodes;
     ErrorCodes[ErrorCodes["USER_NOT_FOUND"] = 1001] = "USER_NOT_FOUND";
     ErrorCodes[ErrorCodes["USER_ALREADY_EXISTS"] = 1002] = "USER_ALREADY_EXISTS";
     ErrorCodes[ErrorCodes["INCORRECT_PASSWORD"] = 1003] = "INCORRECT_PASSWORD";
+    ErrorCodes[ErrorCodes["UNPROSSABLE_ENTITY"] = 2001] = "UNPROSSABLE_ENTITY";
 })(ErrorCodes || (exports.ErrorCodes = ErrorCodes = {}));
