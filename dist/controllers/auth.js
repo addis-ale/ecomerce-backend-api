@@ -47,6 +47,7 @@ const __1 = require("..");
 const bcrypt_1 = require("bcrypt");
 const jwt = __importStar(require("jsonwebtoken"));
 const badRequest_1 = require("../exceptions/badRequest");
+const notFound_1 = require("../exceptions/notFound");
 const root_1 = require("../exceptions/root");
 const users_1 = require("../models/users");
 const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -54,7 +55,7 @@ const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
     const { email, name, password } = req.body;
     let user = yield __1.prismaClient.user.findFirst({ where: { email } });
     if (user) {
-        return next(new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
+        return next(new badRequest_1.BadRequestException("User already exists!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
     }
     user = yield __1.prismaClient.user.create({
         data: {
@@ -63,26 +64,24 @@ const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
             password: (0, bcrypt_1.hashSync)(password, 10),
         },
     });
-    res.json(user);
+    res.status(201).json(user);
 });
 exports.signup = signup;
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     let user = yield __1.prismaClient.user.findFirst({ where: { email } });
     if (!user) {
-        next(new badRequest_1.BadRequestException("no user found", root_1.ErrorCodes.USER_NOT_FOUND));
+        return next(new notFound_1.NotFoundException("User not found", root_1.ErrorCodes.USER_NOT_FOUND));
     }
-    if (user && !(0, bcrypt_1.compareSync)(password, user.password)) {
-        return next(new badRequest_1.BadRequestException("Invalid Credential", root_1.ErrorCodes.INCORRECT_PASSWORD));
+    if (!(0, bcrypt_1.compareSync)(password, user.password)) {
+        return next(new badRequest_1.BadRequestException("Invalid Credentials", root_1.ErrorCodes.INCORRECT_PASSWORD));
     }
     if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET is not defined");
+        return next(new Error("JWT_SECRET is not defined"));
     }
-    if (user) {
-        const token = jwt.sign({
-            userId: user.id,
-        }, process.env.JWT_SECRET);
-        res.json({ user, token });
-    }
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+    });
+    res.status(200).json({ user, token });
 });
 exports.login = login;
