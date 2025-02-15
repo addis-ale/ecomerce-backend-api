@@ -48,28 +48,22 @@ const bcrypt_1 = require("bcrypt");
 const jwt = __importStar(require("jsonwebtoken"));
 const badRequest_1 = require("../exceptions/badRequest");
 const root_1 = require("../exceptions/root");
-const validation_1 = require("../exceptions/validation");
 const users_1 = require("../models/users");
 const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        users_1.SignUpSchema.parse(req.body);
-        const { email, name, password } = req.body;
-        let user = yield __1.prismaClient.user.findFirst({ where: { email } });
-        if (user) {
-            return next(new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
-        }
-        user = yield __1.prismaClient.user.create({
-            data: {
-                name,
-                email,
-                password: (0, bcrypt_1.hashSync)(password, 10),
-            },
-        });
-        res.json(user);
+    users_1.SignUpSchema.parse(req.body);
+    const { email, name, password } = req.body;
+    let user = yield __1.prismaClient.user.findFirst({ where: { email } });
+    if (user) {
+        return next(new badRequest_1.BadRequestException("User already exist!", root_1.ErrorCodes.USER_ALREADY_EXISTS));
     }
-    catch (error) {
-        next(new validation_1.UnprocessableEntity(error === null || error === void 0 ? void 0 : error.issues, "Unprocessable Entity", root_1.ErrorCodes.UNPROSSABLE_ENTITY));
-    }
+    user = yield __1.prismaClient.user.create({
+        data: {
+            name,
+            email,
+            password: (0, bcrypt_1.hashSync)(password, 10),
+        },
+    });
+    res.json(user);
 });
 exports.signup = signup;
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
