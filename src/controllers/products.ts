@@ -98,3 +98,20 @@ export const listProducts = async (
   });
   res.status(200).json({ count, data: products });
 };
+export const getProductById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const product = await prismaClient.product.findFirst({
+    where: {
+      id: +req.params.id,
+    },
+  });
+  if (!product) {
+    return next(
+      new NotFoundException("Product Not Found", ErrorCodes.USER_NOT_FOUND)
+    );
+  }
+  res.status(200).json(product);
+};

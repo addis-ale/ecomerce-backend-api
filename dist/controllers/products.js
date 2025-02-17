@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = void 0;
+exports.getProductById = exports.listProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = void 0;
 const __1 = require("..");
 const notFound_1 = require("../exceptions/notFound");
 const root_1 = require("../exceptions/root");
@@ -85,3 +85,15 @@ const listProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     res.status(200).json({ count, data: products });
 });
 exports.listProducts = listProducts;
+const getProductById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const product = yield __1.prismaClient.product.findFirst({
+        where: {
+            id: +req.params.id,
+        },
+    });
+    if (!product) {
+        return next(new notFound_1.NotFoundException("Product Not Found", root_1.ErrorCodes.USER_NOT_FOUND));
+    }
+    res.status(200).json(product);
+});
+exports.getProductById = getProductById;
