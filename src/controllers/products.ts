@@ -56,3 +56,33 @@ export const updateProduct = async (
   // Respond with the updated product
   res.status(200).json(updatedProduct);
 };
+
+export const deleteProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const productId = req.params.id;
+  const product = await prismaClient.product.findFirst({
+    where: { id: +productId },
+  });
+
+  // If the product is not found, throw a custom NotFoundException
+  if (!product) {
+    return next(
+      new NotFoundException("Product Not Found", ErrorCodes.USER_NOT_FOUND)
+    );
+  }
+
+  // Delete the product from the database
+  await prismaClient.product.delete({
+    where: {
+      id: +productId,
+    },
+  });
+
+  // Return a success response indicating the product was deleted
+  res.status(200).json({
+    message: `Product with ID ${req.params.id} has been successfully deleted.`,
+  });
+};

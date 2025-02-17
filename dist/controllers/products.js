@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProduct = exports.createProduct = void 0;
+exports.deleteProduct = exports.updateProduct = exports.createProduct = void 0;
 const __1 = require("..");
 const notFound_1 = require("../exceptions/notFound");
 const root_1 = require("../exceptions/root");
@@ -54,3 +54,24 @@ const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     res.status(200).json(updatedProduct);
 });
 exports.updateProduct = updateProduct;
+const deleteProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const productId = req.params.id;
+    const product = yield __1.prismaClient.product.findFirst({
+        where: { id: +productId },
+    });
+    // If the product is not found, throw a custom NotFoundException
+    if (!product) {
+        return next(new notFound_1.NotFoundException("Product Not Found", root_1.ErrorCodes.USER_NOT_FOUND));
+    }
+    // Delete the product from the database
+    yield __1.prismaClient.product.delete({
+        where: {
+            id: +productId,
+        },
+    });
+    // Return a success response indicating the product was deleted
+    res.status(200).json({
+        message: `Product with ID ${req.params.id} has been successfully deleted.`,
+    });
+});
+exports.deleteProduct = deleteProduct;

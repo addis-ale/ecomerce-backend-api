@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { errorHandler } from "../errorHandler";
-import { createProduct, updateProduct } from "../controllers/products";
+import {
+  createProduct,
+  deleteProduct,
+  updateProduct,
+} from "../controllers/products";
 import authMiddleware from "../middleware/auth";
 import adminMiddleware from "../middleware/admin";
 const productRoutes: Router = Router();
@@ -13,5 +17,10 @@ productRoutes.put(
   "/:id",
   [authMiddleware, adminMiddleware],
   errorHandler(updateProduct)
+);
+productRoutes.delete(
+  "/:id",
+  [authMiddleware, adminMiddleware],
+  errorHandler(deleteProduct)
 );
 export default productRoutes;

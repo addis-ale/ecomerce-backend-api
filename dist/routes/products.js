@@ -11,4 +11,5 @@ const admin_1 = __importDefault(require("../middleware/admin"));
 const productRoutes = (0, express_1.Router)();
 productRoutes.post("/", [auth_1.default, admin_1.default], (0, errorHandler_1.errorHandler)(products_1.createProduct));
 productRoutes.put("/:id", [auth_1.default, admin_1.default], (0, errorHandler_1.errorHandler)(products_1.updateProduct));
+productRoutes.delete("/:id", [auth_1.default, admin_1.default], (0, errorHandler_1.errorHandler)(products_1.deleteProduct));
 exports.default = productRoutes;
