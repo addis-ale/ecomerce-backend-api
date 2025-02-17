@@ -9,8 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createProduct = void 0;
+exports.updateProduct = exports.createProduct = void 0;
 const __1 = require("..");
+const notFound_1 = require("../exceptions/notFound");
+const root_1 = require("../exceptions/root");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("here is the product route");
     const { name, description, tags, price } = req.body;
@@ -26,3 +28,29 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     res.status(200).json(product);
 });
 exports.createProduct = createProduct;
+const updateProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const product = req.body;
+    const productId = req.params.id;
+    // Find the existing product by its ID
+    let updatedProduct = yield __1.prismaClient.product.findFirst({
+        where: { id: +productId },
+    });
+    // If product not found, throw a custom not found exception
+    if (!updatedProduct) {
+        return next(new notFound_1.NotFoundException("Product Not Found", root_1.ErrorCodes.USER_NOT_FOUND));
+    }
+    // If the tags field exists, join it into a comma-separated string
+    if (product.tags) {
+        product.tags = product.tags.join(",");
+    }
+    // Update the product in the database with the new data
+    updatedProduct = yield __1.prismaClient.product.update({
+        where: {
+            id: +productId,
+        },
+        data: Object.assign({}, product),
+    });
+    // Respond with the updated product
+    res.status(200).json(updatedProduct);
+});
+exports.updateProduct = updateProduct;
