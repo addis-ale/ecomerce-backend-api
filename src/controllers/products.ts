@@ -86,3 +86,15 @@ export const deleteProduct = async (
     message: `Product with ID ${req.params.id} has been successfully deleted.`,
   });
 };
+export const listProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const count = await prismaClient.product.count();
+  const products = await prismaClient.product.findMany({
+    skip: +(req.query.skip ?? 0),
+    take: 5,
+  });
+  res.status(200).json({ count, data: products });
+};

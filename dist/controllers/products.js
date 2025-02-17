@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.createProduct = void 0;
+exports.listProducts = exports.deleteProduct = exports.updateProduct = exports.createProduct = void 0;
 const __1 = require("..");
 const notFound_1 = require("../exceptions/notFound");
 const root_1 = require("../exceptions/root");
@@ -75,3 +75,13 @@ const deleteProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     });
 });
 exports.deleteProduct = deleteProduct;
+const listProducts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const count = yield __1.prismaClient.product.count();
+    const products = yield __1.prismaClient.product.findMany({
+        skip: +((_a = req.query.skip) !== null && _a !== void 0 ? _a : 0),
+        take: 5,
+    });
+    res.status(200).json({ count, data: products });
+});
+exports.listProducts = listProducts;
